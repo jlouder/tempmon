@@ -22,8 +22,8 @@ public class TestWeathercloudClient {
 
 	@Test
 	public void testFindNearbyDevices() {
-		double latitude = -105.5119818;
-		double longitude = 40.3690963;
+		double longitude = -105.5119818;
+		double latitude = 40.3690963;
 		List<Device> devices = client.findNearbyDevices(latitude, longitude, 1);
 		devices.forEach(d -> logger.info("found device: {}", d));
 	}

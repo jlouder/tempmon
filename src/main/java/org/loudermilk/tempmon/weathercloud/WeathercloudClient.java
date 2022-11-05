@@ -21,7 +21,7 @@ public class WeathercloudClient {
 	
 	public List<Device> findNearbyDevices(double latitude, double longitude, int withinMiles) {
 		URI uri = UriComponentsBuilder.fromUriString(nearbyDevicesUrl)
-		.build(longitude, latitude, withinMiles);
+		.build(latitude, longitude, withinMiles);
 		String response = WebClient.create()
 			.get()
 			.uri(uri)
@@ -37,6 +37,15 @@ public class WeathercloudClient {
 			throw new RuntimeException(e);
 		}
 		return deviceList.getDevices();
+	}
+	
+	public Device findDevice(double latitude, double longitude, String deviceCode) {
+		for (Device device : findNearbyDevices(latitude, longitude, 1)) {
+			if (device.getCode().equals(deviceCode)) {
+				return device;
+			}
+		}
+		throw new DeviceNotFoundException("device " + deviceCode + " not found");
 	}
 
 	public String getNearbyDevicesUrl() {
