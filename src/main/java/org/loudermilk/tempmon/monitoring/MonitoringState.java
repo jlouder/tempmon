@@ -8,6 +8,8 @@ public class MonitoringState {
 	
 	private Double temperature;
 	
+	private long timestamp;
+	
 	public enum Code {
 		UNKNOWN, ERROR, OK, BELOW_THRESHOLD
 	}
@@ -16,12 +18,14 @@ public class MonitoringState {
 		super();
 		this.code = code;
 		this.message = message;
+		timestamp = System.currentTimeMillis();
 	}
 
 	public MonitoringState(Code code, double temperature) {
 		super();
 		this.code = code;
 		this.temperature = temperature;
+		timestamp = System.currentTimeMillis();
 	}
 
 	public MonitoringState(Code code, String message, double temperature) {
@@ -29,6 +33,7 @@ public class MonitoringState {
 		this.code = code;
 		this.message = message;
 		this.temperature = temperature;
+		timestamp = System.currentTimeMillis();
 	}
 
 	public Code getCode() {
@@ -39,8 +44,12 @@ public class MonitoringState {
 		return message;
 	}
 
-	public double getTemperature() {
+	public Double getTemperature() {
 		return temperature;
+	}
+	
+	public long getTimestamp() {
+		return timestamp;
 	}
 
 	@Override

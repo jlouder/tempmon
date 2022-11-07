@@ -1,21 +1,16 @@
 package org.loudermilk.tempmon.monitoring;
 
+import org.loudermilk.tempmon.weathercloud.WeathercloudClient;
+import org.loudermilk.tempmon.weathercloud.model.Device;
+import org.loudermilk.tempmon.weathercloud.model.Values;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-
-import org.loudermilk.tempmon.weathercloud.WeathercloudClient;
-import org.loudermilk.tempmon.weathercloud.model.Device;
-import org.loudermilk.tempmon.weathercloud.model.Values;
 
 @Component
 public class MonitoringService {
@@ -24,6 +19,9 @@ public class MonitoringService {
 
 	@Autowired
 	private WeathercloudClient client;
+	
+	@Autowired
+	private NotificationService notificationService;
 	
 	@Value("${weathercloud.device.latitude}")
 	private double deviceLatitude;
@@ -37,10 +35,9 @@ public class MonitoringService {
 	@Value("${monitor.minimumTemperature}")
 	private double minimumTemperature;
 	
-	@Value("${monitor.alertEmailAddresses")
-	private String[] alertEmailAddresses;
-	
 	private MonitoringState currentState = new MonitoringState(MonitoringState.Code.UNKNOWN, "not monitored yet");
+	
+	private MonitoringState previousState;
 	
 	private long lastStateChangeTimestamp = System.currentTimeMillis();
 	
@@ -64,32 +61,15 @@ public class MonitoringService {
 		
 		if (currentState.getCode() != newState.getCode()) {
 			lastStateChangeTimestamp = System.currentTimeMillis();
-			notify(currentState, newState, lastStateChangeTimestamp);
+			notificationService.notify(currentState, newState, lastStateChangeTimestamp);
 		}
 		
+		previousState = currentState;
 		currentState = newState;
 		logger.debug("current state: {}", currentState);
 	}
-
-	void notify(MonitoringState oldState, MonitoringState newState, long lastStateChangeTimestamp) {
-		// See if this state change requires notification
-		if (oldState.getCode() == newState.getCode()) {
-			// nothing changed
-			return;
-		}
-		if (oldState.getCode() == MonitoringState.Code.UNKNOWN &&
-				newState.getCode() == MonitoringState.Code.OK) {
-			// first check, and temp is okay
-			return;
-		}
-		// TODO send email
-		List<String> emailAddresses = Arrays.stream(alertEmailAddresses).collect(Collectors.toList());
-		logger.info("old state: {}", oldState);
-		logger.info("new state: {}", newState);
-		logger.info("send email to: {}", emailAddresses);
-	}
 	
-	@PostConstruct
+	@EventListener(ApplicationReadyEvent.class)
 	void onStartup() {
 		monitorTemperature();
 	}
@@ -134,16 +114,12 @@ public class MonitoringService {
 		this.minimumTemperature = minimumTemperature;
 	}
 
-	public String[] getAlertEmailAddresses() {
-		return alertEmailAddresses;
-	}
-
-	public void setAlertEmailAddresses(String[] alertEmailAddresses) {
-		this.alertEmailAddresses = alertEmailAddresses;
-	}
-
 	public MonitoringState getCurrentState() {
 		return currentState;
+	}
+	
+	public MonitoringState getPreviousState() {
+		return previousState;
 	}
 
 	public long getLastStateChangeTimestamp() {
