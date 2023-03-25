@@ -38,13 +38,13 @@ public class MonitoringController {
 	
 	String friendlyTimeDifference(long milliseconds) {
 		if (milliseconds > (1000L * 60 * 60 * 24 * 30)) {
-			return String.format("%.1f months ago", (double) milliseconds / (1000 * 60 * 60 * 24 * 30));
+			return String.format("%.1f months ago", (double) milliseconds / (1000L * 60 * 60 * 24 * 30));
 		} else if (milliseconds > (1000 * 60 * 60 * 24)) {
-			return String.format("%.1f days ago", (double) milliseconds / (1000 * 60 * 60 * 24));
+			return String.format("%.1f days ago", (double) milliseconds / (1000L * 60 * 60 * 24));
 		} else if (milliseconds > (1000 * 60 * 60)) {
-			return String.format("%.1f hours ago", (double) milliseconds / (1000 * 60 * 60));
+			return String.format("%.1f hours ago", (double) milliseconds / (1000L * 60 * 60));
 		} else if (milliseconds > (1000 * 60)) {
-			return String.format("%.1f minutes ago", (double) milliseconds / (1000 * 60));
+			return String.format("%.1f minutes ago", (double) milliseconds / (1000L * 60));
 		} else {
 			return String.format("%d seconds ago", milliseconds / 1000);
 		}
