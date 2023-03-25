@@ -7,6 +7,8 @@ import org.loudermilk.tempmon.weathercloud.model.Device;
 import org.loudermilk.tempmon.weathercloud.model.DeviceList;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -21,7 +23,7 @@ public class WeathercloudClient {
 	
 	public List<Device> findNearbyDevices(double latitude, double longitude, int withinMiles) {
 		URI uri = UriComponentsBuilder.fromUriString(nearbyDevicesUrl)
-		.build(longitude, latitude, withinMiles);
+		.build(latitude, longitude, withinMiles);
 		String response = WebClient.create()
 			.get()
 			.uri(uri)
@@ -37,6 +39,16 @@ public class WeathercloudClient {
 			throw new RuntimeException(e);
 		}
 		return deviceList.getDevices();
+	}
+	
+	@Retryable(maxAttempts = 5, backoff = @Backoff(delay = 5000, multiplier = 2))
+	public Device findDevice(double latitude, double longitude, String deviceCode) {
+		for (Device device : findNearbyDevices(latitude, longitude, 1)) {
+			if (device.getCode().equals(deviceCode)) {
+				return device;
+			}
+		}
+		throw new DeviceNotFoundException("device " + deviceCode + " not found");
 	}
 
 	public String getNearbyDevicesUrl() {
