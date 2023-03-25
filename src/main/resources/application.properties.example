@@ -1,0 +1,28 @@
+weathercloud.nearbyDevicesUrl=https://app.weathercloud.net/page/coordinates/latitude/{latitude}/longitude/{longitude}/distance/{distance}
+
+# The device ID of your weather station. You can see this in most of the
+# URLs for your device. Sometimes it has a 'd' at the beginning. You
+# just need the numeric part.
+weathercloud.device.code=1234567890
+
+# The latitude and longitude (approximately) of your weather station,
+# in decimal degrees (not degrees/minutes/seconds).
+# The app finds your device by asking weathercloud for all stations
+# within a mile of this point, and that needs to include your station.
+weathercloud.device.longitude=-81.390358
+weathercloud.device.latitude=28.670401
+
+# How frequently to check the temperature at weathercloud
+monitor.cron=0 */30 * * * *
+# The minimum temperature. The app will alert if below this,
+# until it is back above this temperature.
+monitor.minimumTemperature=45.5
+
+# Email addresses to notify when there's an alert. Separate addresses
+# with a comma.
+email.recipients=someone@example.com,another-person@example.com
+# SMTP server to use to send email
+email.host=localhost
+email.port=25
+
+logging.level.org.loudermilk=DEBUG
