@@ -2,6 +2,7 @@ package org.loudermilk.tempmon.weathercloud;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -54,7 +55,7 @@ public class TestWeathercloudClient {
 		List<Device> devices = client.findNearbyDevices(LATITUDE, LONGITUDE, 1);
 		devices.forEach(d -> logger.info("found device: {}", d));
 		assertThat(devices).hasSize(2);
-		assertThat(devices.stream().map(device -> device.getCode()).toList()).containsExactlyInAnyOrder("5703705358", "1614024241");
+		assertThat(devices.stream().map(device -> device.getCode()).collect(Collectors.toList())).containsExactlyInAnyOrder("5703705358", "1614024241");
 	}
 	
 	@Test
