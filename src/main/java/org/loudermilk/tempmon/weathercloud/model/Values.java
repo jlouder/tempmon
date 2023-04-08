@@ -13,6 +13,9 @@ public class Values {
 	
 	@JsonProperty("tempin")
 	private int indoorTemperature;
+	
+	@JsonProperty("update")
+	private int secondsSinceUpdate;
 
 	public long getEpoch() {
 		return epoch;
@@ -38,9 +41,18 @@ public class Values {
 		this.indoorTemperature = indoorTemperature;
 	}
 
+	public int getSecondsSinceUpdate() {
+		return secondsSinceUpdate;
+	}
+
+	public void setSecondsSinceUpdate(int secondsSinceUpdate) {
+		this.secondsSinceUpdate = secondsSinceUpdate;
+	}
+
 	@Override
 	public String toString() {
 		return "Values [epoch=" + epoch + ", outdoorTemperature=" + outdoorTemperature + ", indoorTemperature="
-				+ indoorTemperature + "]";
+				+ indoorTemperature + ", secondsSinceUpdate=" + secondsSinceUpdate + "]";
 	}
+
 }

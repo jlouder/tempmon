@@ -35,6 +35,9 @@ public class MonitoringService {
 	@Value("${monitor.minimumTemperature}")
 	private double minimumTemperature;
 	
+	@Value("${monitor.maximumAgeSeconds}")
+	private int maximumAgeSeconds;
+	
 	private MonitoringState currentState = new MonitoringState(MonitoringState.Code.UNKNOWN, "not monitored yet");
 	
 	private MonitoringState previousState;
@@ -49,8 +52,11 @@ public class MonitoringService {
 			Device device = client.findDevice(deviceLatitude, deviceLongitude, deviceCode);
 			Values values = device.getValues();
 			double currentTemperature = (double) values.getIndoorTemperature() / 10 * 9/5 + 32;
-			if (currentTemperature < minimumTemperature) {
-				newState = new MonitoringState(MonitoringState.Code.BELOW_THRESHOLD, currentTemperature);
+			if (values.getSecondsSinceUpdate() > maximumAgeSeconds) {
+				String message = String.format("temperature was last uploaded %d seconds ago", values.getSecondsSinceUpdate());
+				newState = new MonitoringState(MonitoringState.Code.TOO_OLD, message, currentTemperature);
+			} else if (currentTemperature < minimumTemperature) {
+				newState = new MonitoringState(MonitoringState.Code.TOO_LOW, currentTemperature);
 			} else {
 				newState = new MonitoringState(MonitoringState.Code.OK, currentTemperature);
 			}
@@ -124,5 +130,13 @@ public class MonitoringService {
 
 	public long getLastStateChangeTimestamp() {
 		return lastStateChangeTimestamp;
+	}
+
+	public int getMaximumAgeSeconds() {
+		return maximumAgeSeconds;
+	}
+
+	public void setMaximumAgeSeconds(int maximumAgeSeconds) {
+		this.maximumAgeSeconds = maximumAgeSeconds;
 	}
 }
