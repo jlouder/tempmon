@@ -17,6 +17,10 @@ monitor.cron=0 */30 * * * *
 # The minimum temperature. The app will alert if below this,
 # until it is back above this temperature.
 monitor.minimumTemperature=45.5
+# Maximum age (in seconds) of the temperature reading at
+# weathercloud. The app will alert if the reading is older
+# than this, since it means the weather station isn't uploading.
+monitor.maximumAgeSeconds=1500
 
 # Email addresses to notify when there's an alert. Separate addresses
 # with a comma.
