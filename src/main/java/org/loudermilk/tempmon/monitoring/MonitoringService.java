@@ -62,7 +62,7 @@ public class MonitoringService {
 		if (currentState.getCode() != newState.getCode()) {
 			previousState = currentState;
 			lastStateChangeTimestamp = System.currentTimeMillis();
-			notificationService.notify(currentState, newState, lastStateChangeTimestamp);
+			notificationService.notify(currentState, newState);
 		}
 		
 		currentState = newState;
