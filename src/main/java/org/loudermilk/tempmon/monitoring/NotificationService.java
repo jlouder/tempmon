@@ -24,7 +24,7 @@ public class NotificationService {
 	@Value("${email.recipients}")
 	private String[] emailRecipients;
 	
-	void notify(MonitoringState oldState, MonitoringState newState, long lastStateChangeTimestamp) {
+	void notify(MonitoringState oldState, MonitoringState newState) {
 		// See if this state change requires notification
 		if (oldState.getCode() == newState.getCode()) {
 			// nothing changed
@@ -35,11 +35,10 @@ public class NotificationService {
 			// first check, and temp is okay
 			return;
 		}
-		// TODO send email
 		List<String> emailAddresses = Arrays.stream(emailRecipients).collect(Collectors.toList());
 		logger.info("old state: {}", oldState);
 		logger.info("new state: {}", newState);
-		logger.info("send email to: {}", emailAddresses);
+		logger.info("sending email to: {}", emailAddresses);
 		
 		SimpleMailMessage message = new SimpleMailMessage();
 		message.setTo(emailRecipients);
@@ -50,6 +49,7 @@ public class NotificationService {
 		} catch (MailException e) {
 			logger.error("failed to send mail", e);
 		}
+		logger.info("sent email to: {}", emailAddresses);
 	}
 
 	public JavaMailSender getMailSender() {

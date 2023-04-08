@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'org.loudermilk'
-version = '1.1.0'
+version = '1.1.1'
 sourceCompatibility = '17'
 
 repositories {
@@ -21,7 +21,6 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-aop'
 	implementation 'org.springframework.retry:spring-retry'
 	implementation 'com.fasterxml.jackson.module:jackson-module-jaxb-annotations'
-	implementation 'javax.mail:mail:1.5.0-b01'
 	
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'com.squareup.okhttp3:okhttp:4.0.1'
