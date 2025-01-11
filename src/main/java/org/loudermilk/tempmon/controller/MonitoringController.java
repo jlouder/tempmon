@@ -52,7 +52,7 @@ public class MonitoringController {
 	}
 	
 	String friendlyTimestamp(long milliseconds) {
-		DateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd h:mm aa zzz");
+		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd h:mm aa zzz");
 		Date date = new Date(milliseconds);
 		return dateFormat.format(date);
 	}

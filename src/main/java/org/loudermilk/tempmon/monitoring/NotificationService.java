@@ -2,7 +2,6 @@ package org.loudermilk.tempmon.monitoring;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +34,7 @@ public class NotificationService {
 			// first check, and temp is okay
 			return;
 		}
-		List<String> emailAddresses = Arrays.stream(emailRecipients).collect(Collectors.toList());
+		List<String> emailAddresses = Arrays.stream(emailRecipients).toList();
 		logger.info("old state: {}", oldState);
 		logger.info("new state: {}", newState);
 		logger.info("sending email to: {}", emailAddresses);

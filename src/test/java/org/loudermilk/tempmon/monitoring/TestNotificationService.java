@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Disabled;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 @Disabled("this test sends email")
-public class TestNotificationService {
+class TestNotificationService {
 
 	private NotificationService service;
 	
@@ -21,7 +21,7 @@ public class TestNotificationService {
 	}
 	
 	@Test
-	public void testNotify() {
+	void testNotify() {
 		MonitoringState oldState = new MonitoringState(MonitoringState.Code.OK, 75);
 		MonitoringState newState = new MonitoringState(MonitoringState.Code.ERROR, "UNIT TESTING!!!");
 		service.notify(oldState, newState);
