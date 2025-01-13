@@ -1,14 +1,9 @@
 package org.loudermilk.tempmon.monitoring;
 
-import org.loudermilk.tempmon.weathercloud.WeathercloudClient;
-import org.loudermilk.tempmon.weathercloud.model.Device;
-import org.loudermilk.tempmon.weathercloud.model.Values;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -18,25 +13,13 @@ public class MonitoringService {
 	private static Logger logger = LoggerFactory.getLogger(MonitoringService.class);
 
 	@Autowired
-	private WeathercloudClient client;
+	private TemperatureProvider provider;
 	
 	@Autowired
 	private NotificationService notificationService;
 	
-	@Value("${weathercloud.device.latitude}")
-	private double deviceLatitude;
-	
-	@Value("${weathercloud.device.longitude}")
-	private double deviceLongitude;
-	
-	@Value("${weathercloud.device.code}")
-	private String deviceCode;
-	
 	@Value("${monitor.minimumTemperature}")
 	private double minimumTemperature;
-	
-	@Value("${monitor.maximumAgeSeconds}")
-	private int maximumAgeSeconds;
 	
 	private MonitoringState currentState = new MonitoringState(MonitoringState.Code.UNKNOWN, "not monitored yet");
 	
@@ -44,18 +27,13 @@ public class MonitoringService {
 	
 	private long lastStateChangeTimestamp = System.currentTimeMillis();
 	
-	@Scheduled(cron = "${monitor.cron}")
+	@Scheduled(fixedRateString = "${monitor.rate}")
 	void monitorTemperature() {
 		logger.debug("fetching current temperature");
 		MonitoringState newState;
 		try {
-			Device device = client.findDevice(deviceLatitude, deviceLongitude, deviceCode);
-			Values values = device.getValues();
-			double currentTemperature = (double) values.getIndoorTemperature() / 10 * 9/5 + 32;
-			if (values.getSecondsSinceUpdate() > maximumAgeSeconds) {
-				String message = String.format("temperature was last uploaded %d seconds ago", values.getSecondsSinceUpdate());
-				newState = new MonitoringState(MonitoringState.Code.TOO_OLD, message, currentTemperature);
-			} else if (currentTemperature < minimumTemperature) {
+			double currentTemperature = provider.getTemperature();
+			if (currentTemperature < minimumTemperature) {
 				newState = new MonitoringState(MonitoringState.Code.TOO_LOW, currentTemperature);
 			} else {
 				newState = new MonitoringState(MonitoringState.Code.OK, currentTemperature);
@@ -75,41 +53,12 @@ public class MonitoringService {
 		logger.debug("current state: {}", currentState);
 	}
 	
-	@EventListener(ApplicationReadyEvent.class)
-	void onStartup() {
-		monitorTemperature();
+	public TemperatureProvider getProvider() {
+		return provider;
 	}
 
-	public WeathercloudClient getClient() {
-		return client;
-	}
-
-	public void setClient(WeathercloudClient client) {
-		this.client = client;
-	}
-
-	public double getDeviceLatitude() {
-		return deviceLatitude;
-	}
-
-	public void setDeviceLatitude(double deviceLatitude) {
-		this.deviceLatitude = deviceLatitude;
-	}
-
-	public double getDeviceLongitude() {
-		return deviceLongitude;
-	}
-
-	public void setDeviceLongitude(double deviceLongitude) {
-		this.deviceLongitude = deviceLongitude;
-	}
-
-	public String getDeviceCode() {
-		return deviceCode;
-	}
-
-	public void setDeviceCode(String deviceCode) {
-		this.deviceCode = deviceCode;
+	public void setProvider(TemperatureProvider provider) {
+		this.provider = provider;
 	}
 
 	public double getMinimumTemperature() {
@@ -130,13 +79,5 @@ public class MonitoringService {
 
 	public long getLastStateChangeTimestamp() {
 		return lastStateChangeTimestamp;
-	}
-
-	public int getMaximumAgeSeconds() {
-		return maximumAgeSeconds;
-	}
-
-	public void setMaximumAgeSeconds(int maximumAgeSeconds) {
-		this.maximumAgeSeconds = maximumAgeSeconds;
 	}
 }

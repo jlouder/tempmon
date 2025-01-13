@@ -1,27 +1,22 @@
 package org.loudermilk.tempmon.weathercloud;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.loudermilk.tempmon.weathercloud.model.Device;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
-class TestWeathercloudClient {
+class TestWeathercloudProvider {
 	
-	private static Logger logger = LoggerFactory.getLogger(TestWeathercloudClient.class);
-	
-	private WeathercloudClient client;
+	private WeathercloudProvider provider;
 	
 	private static MockWebServer mockWebServer;
 	
@@ -42,33 +37,28 @@ class TestWeathercloudClient {
 	
 	@BeforeEach
 	public void beforeEachTest() {
-		client = new WeathercloudClient();
-		client.setNearbyDevicesUrl(String.format(
+		provider = new WeathercloudProvider();
+		provider.setNearbyDevicesUrl(String.format(
 				"http://localhost:%d/page/coordinates/latitude/{latitude}/longitude/{longitude}/distance/{distance}",
 				mockWebServer.getPort()));
+		provider.setDeviceLatitude(latitude);
+		provider.setDeviceLongitude(longitude);
+		provider.setDeviceCode("1614024241");
+		provider.setMaximumAgeSeconds(1500);
 	}
 
 	@Test
-	void testFindNearbyDevices() {
+	void testMultipleNearbyDevices() {
 		mockWebServer.enqueue(new MockResponse().setBody(responseString).addHeader("Content-Type", "application/json"));
-		List<Device> devices = client.findNearbyDevices(latitude, longitude, 1);
-		devices.forEach(d -> logger.info("found device: {}", d));
-		assertThat(devices).hasSize(2);
-		assertThat(devices.stream().map(Device::getCode).toList()).containsExactlyInAnyOrder("5703705358", "1614024241");
+		assertThat(provider.getTemperature(), is(80.06));
 	}
 	
 	@Test
-	void testFindDeviceThatExists() {
+	void testDeviceDoesNotExist() {
 		mockWebServer.enqueue(new MockResponse().setBody(responseString).addHeader("Content-Type", "application/json"));
-		Device device = client.findDevice(latitude, longitude, "1614024241");
-		assertThat(device).hasFieldOrPropertyWithValue("code", "1614024241");
-	}
-
-	@Test
-	void testFindDeviceThatDoesNotExist() {
-		mockWebServer.enqueue(new MockResponse().setBody(responseString).addHeader("Content-Type", "application/json"));
+		provider.setDeviceCode("999999999");
 		assertThatExceptionOfType(DeviceNotFoundException.class).isThrownBy(() -> {
-			client.findDevice(latitude, longitude, "99999999");
+			provider.getTemperature();
 		});
 	}
 }

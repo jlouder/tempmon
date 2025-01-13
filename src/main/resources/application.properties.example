@@ -12,8 +12,15 @@ weathercloud.device.code=1234567890
 weathercloud.device.longitude=-81.390358
 weathercloud.device.latitude=28.670401
 
-# How frequently to check the temperature at weathercloud
-monitor.cron=0 */30 * * * *
+venstar.baseUrl=https://api.skyportcloud.com/
+# Email address and password for the venstar SkyPort account
+venstar.emailAddress=user@example.org
+venstar.password=mypassword
+# Device ID of the thermostat
+venstar.deviceId=1234567890
+
+# How frequently to check the temperature
+monitor.rate=25m
 # The minimum temperature. The app will alert if below this,
 # until it is back above this temperature.
 monitor.minimumTemperature=45.5
@@ -21,6 +28,10 @@ monitor.minimumTemperature=45.5
 # weathercloud. The app will alert if the reading is older
 # than this, since it means the weather station isn't uploading.
 monitor.maximumAgeSeconds=1500
+# Which method to use to get the temperature, one of:
+#   weathercloud - a WeatherCloud weather station
+#   venstar      - a Venstar thermostat
+monitor.temperatureProvider=venstar
 
 # Email addresses to notify when there's an alert. Separate addresses
 # with a comma.

@@ -11,7 +11,7 @@ public class MonitoringState {
 	private long timestamp;
 	
 	public enum Code {
-		UNKNOWN, ERROR, OK, TOO_LOW, TOO_OLD
+		UNKNOWN, ERROR, OK, TOO_LOW
 	}
 
 	public MonitoringState(Code code, String message) {

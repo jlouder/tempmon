@@ -21,7 +21,6 @@ public class MonitoringController {
 		model.addAttribute("state", service.getCurrentState());
 		model.addAttribute("previousState", service.getPreviousState());
 		model.addAttribute("alertTemperature", String.format("%.1f", service.getMinimumTemperature()));
-		model.addAttribute("alertTemperatureAgeSeconds", service.getMaximumAgeSeconds());
 		Double temperature = service.getCurrentState().getTemperature();
 		if (temperature == null) {
 			model.addAttribute("temperature", "--.-");
