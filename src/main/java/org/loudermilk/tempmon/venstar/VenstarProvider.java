@@ -18,13 +18,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import io.netty.channel.ChannelOption;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
 
 @Component
 @ConditionalOnProperty(name="monitor.temperatureProvider", havingValue="venstar")
@@ -53,10 +58,12 @@ public class VenstarProvider implements TemperatureProvider {
 	long tokenExpireTime;
 	
 	public VenstarProvider() {
+		HttpClient httpClient = HttpClient.create().option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000);
 		webClient = WebClient.builder()
 				.filter(forceJsonContentType())
 				.filter(logRequest())
 				.filter(logResponse())
+				.clientConnector(new ReactorClientHttpConnector(httpClient))
 				.build();
 	}
 	
@@ -96,6 +103,7 @@ public class VenstarProvider implements TemperatureProvider {
 		tokenExpireTime = System.currentTimeMillis() + tokenRefreshResponse.getExpiresIn() * 1000L;
 	}
 
+	@Retryable(maxAttempts = 5, backoff = @Backoff(delay = 5000, multiplier = 2))
 	@Override
 	public double getTemperature() {
 		if (accessToken == null) {
