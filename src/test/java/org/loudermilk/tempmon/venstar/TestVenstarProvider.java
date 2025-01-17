@@ -4,20 +4,25 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.loudermilk.tempmon.util.ResettableQueueDispatcher;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 
 class TestVenstarProvider {
 	
 	private VenstarProvider provider;
 	
 	private static MockWebServer mockWebServer;
+	
+	private static ResettableQueueDispatcher dispatcher;
 	
 	private String loginResponseString = """
 			{ "AccessToken": "myaccesstoken", "RefreshToken": "myrefreshtoken", "ExpiresIn": 3600 }
@@ -91,7 +96,9 @@ class TestVenstarProvider {
 
     @BeforeAll
     static void setUp() throws IOException {
+    	dispatcher = new ResettableQueueDispatcher();
         mockWebServer = new MockWebServer();
+        mockWebServer.setDispatcher(dispatcher);
         mockWebServer.start();
     }
 
@@ -101,7 +108,11 @@ class TestVenstarProvider {
     }
 
 	@BeforeEach
-	public void beforeEachTest() {
+	public void beforeEachTest() throws InterruptedException {
+		// clear out any queued responses
+		dispatcher.clear();
+		// clear out any requests the previous test didn't read
+		while (mockWebServer.takeRequest(100, TimeUnit.MILLISECONDS) != null);
 		provider = new VenstarProvider();
 		provider.setBaseUrl(String.format("http://localhost:%d/", mockWebServer.getPort()));
 		provider.setEmailAddress("user@example.org");
@@ -119,11 +130,12 @@ class TestVenstarProvider {
 	}
 	
 	@Test
-	void testTokenRefresh() {
-		// we're logged in, but the token expire time is in the past
+	void testRefreshAccessToken() {
+		// we're logged in, refresh token is valid, but the access token has expired
 		provider.accessToken = "accesstoken1";
 		provider.refreshToken = "myrefreshtoken";
-		provider.tokenExpireTime = 0L;
+		provider.accessTokenExpireTime = 0L;
+		provider.refreshTokenExpireTime = Long.MAX_VALUE;
 		String tokenRefreshResponseString = """
 				{ "AccessToken": "accesstoken2", "ExpiresIn": 3600, "IdToken": "idtoken" }
 				""";
@@ -134,10 +146,30 @@ class TestVenstarProvider {
 	}
 	
 	@Test
+	void testRefreshRefreshToken() throws InterruptedException {
+		// access token has expired and so has the refresh token
+		provider.accessToken = "accesstoken1";
+		provider.refreshToken = "refreshtoken1";
+		provider.accessTokenExpireTime = 0L;
+		provider.refreshTokenExpireTime = 0L;
+		String response = """
+			{ "AccessToken": "accesstoken2", "RefreshToken": "refreshtoken2", "ExpiresIn": 3600 }
+				""";
+		mockWebServer.enqueue(new MockResponse().setBody(response).addHeader("Content-Type", "application/json"));
+		mockWebServer.enqueue(new MockResponse().setBody(deviceResponseString).addHeader("Content-Type", "application/json"));
+		provider.getTemperature();
+		RecordedRequest request = mockWebServer.takeRequest();
+		assertThat(request.getPath(), is("/users/auth/login"));
+		assertThat(provider.accessToken, is("accesstoken2"));
+		assertThat(provider.refreshToken, is("refreshtoken2"));
+	}
+	
+	@Test
 	void testGetTemperature() {
 		// we're logged in and the token hasn't expired
 		provider.accessToken = "accesstoken1";
-		provider.tokenExpireTime = Long.MAX_VALUE;
+		provider.accessTokenExpireTime = Long.MAX_VALUE;
+		provider.refreshTokenExpireTime = Long.MAX_VALUE;
 		mockWebServer.enqueue(new MockResponse().setBody(deviceResponseString).addHeader("Content-Type", "application/json"));
 		assertThat(provider.getTemperature(), is((double) 51));
 	}

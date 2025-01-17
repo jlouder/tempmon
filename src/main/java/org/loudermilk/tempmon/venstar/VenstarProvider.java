@@ -55,7 +55,8 @@ public class VenstarProvider implements TemperatureProvider {
 	private WebClient webClient;
 	String accessToken;
 	String  refreshToken;
-	long tokenExpireTime;
+	long accessTokenExpireTime;
+	long refreshTokenExpireTime;
 	
 	public VenstarProvider() {
 		HttpClient httpClient = HttpClient.create().option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000);
@@ -82,7 +83,10 @@ public class VenstarProvider implements TemperatureProvider {
 		Assert.notNull(loginResponse, "login response must not be null");
 		accessToken = loginResponse.getAccessToken();
 		refreshToken = loginResponse.getRefreshToken();
-		tokenExpireTime = System.currentTimeMillis() + loginResponse.getExpiresIn() * 1000L;
+		accessTokenExpireTime = System.currentTimeMillis() + loginResponse.getExpiresIn() * 1000L;
+		// This isn't in the login response, but the refresh token appears to
+		// stop working after two days.
+		refreshTokenExpireTime = System.currentTimeMillis() + 60*60*47 * 1000L;
 	}
 	
 	private void refreshAccessToken() {
@@ -100,7 +104,7 @@ public class VenstarProvider implements TemperatureProvider {
 				.block();
 		Assert.notNull(tokenRefreshResponse, "token refresh response must not be null");
 		accessToken = tokenRefreshResponse.getAccessToken();
-		tokenExpireTime = System.currentTimeMillis() + tokenRefreshResponse.getExpiresIn() * 1000L;
+		accessTokenExpireTime = System.currentTimeMillis() + tokenRefreshResponse.getExpiresIn() * 1000L;
 	}
 
 	@Retryable(maxAttempts = 5, backoff = @Backoff(delay = 5000, multiplier = 2))
@@ -108,8 +112,12 @@ public class VenstarProvider implements TemperatureProvider {
 	public double getTemperature() {
 		if (accessToken == null) {
 			login();
-		} else if (System.currentTimeMillis() > tokenExpireTime) {
-			refreshAccessToken();
+		} else if (System.currentTimeMillis() > accessTokenExpireTime) {
+			if (System.currentTimeMillis() > refreshTokenExpireTime) {
+				login();
+			} else {
+				refreshAccessToken();
+			}
 		}
 		URI uri = UriComponentsBuilder.fromUriString(baseUrl).pathSegment("devices")
 				.queryParam("owner", "false")
