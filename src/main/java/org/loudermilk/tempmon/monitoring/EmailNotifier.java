@@ -7,15 +7,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 
 @Component
-public class NotificationService {
+@ConditionalOnProperty(name="monitor.notifier", havingValue="email")
+public class EmailNotifier implements Notifier {
 	
-	private static Logger logger = LoggerFactory.getLogger(NotificationService.class);
+	private static Logger logger = LoggerFactory.getLogger(EmailNotifier.class);
 	
 	@Autowired
 	private JavaMailSender mailSender;
@@ -23,7 +25,7 @@ public class NotificationService {
 	@Value("${email.recipients}")
 	private String[] emailRecipients;
 	
-	void notify(MonitoringState oldState, MonitoringState newState) {
+	public void notify(MonitoringState oldState, MonitoringState newState) {
 		// See if this state change requires notification
 		if (oldState.getCode() == newState.getCode()) {
 			// nothing changed

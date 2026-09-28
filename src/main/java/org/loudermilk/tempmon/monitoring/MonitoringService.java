@@ -16,7 +16,7 @@ public class MonitoringService {
 	private TemperatureProvider provider;
 	
 	@Autowired
-	private NotificationService notificationService;
+	private Notifier notificationService;
 	
 	@Value("${monitor.minimumTemperature}")
 	private double minimumTemperature;

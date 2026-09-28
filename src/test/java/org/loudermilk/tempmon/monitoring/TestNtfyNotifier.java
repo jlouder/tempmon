@@ -3,27 +3,30 @@ package org.loudermilk.tempmon.monitoring;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 @Disabled("this test sends email")
-class TestNotificationService {
+class TestNtfyNotifier {
 
-	private NotificationService service;
+	private NtfyNotifier service;
 	
 	@BeforeEach
 	public void beforeEachTest() {
-		JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-		mailSender.setHost("smtp");
-		mailSender.setPort(25);
-		service = new NotificationService();
-		service.setMailSender(mailSender);
-		service.setEmailRecipients(new String[]{"joel@loudermilk.org"});
+		service = new NtfyNotifier();
+//		service.setTopicName("my-topic-name");
+		service.setPriority("high");
 	}
 	
 	@Test
-	void testNotify() {
+	void testNotifyError() {
 		MonitoringState oldState = new MonitoringState(MonitoringState.Code.OK, 75);
 		MonitoringState newState = new MonitoringState(MonitoringState.Code.ERROR, "UNIT TESTING!!!");
+		service.notify(oldState, newState);
+	}
+
+	@Test
+	void testNotifyOk() {
+		MonitoringState oldState = new MonitoringState(MonitoringState.Code.ERROR, "too low!");
+		MonitoringState newState = new MonitoringState(MonitoringState.Code.OK, "UNIT TESTING!!!");
 		service.notify(oldState, newState);
 	}
 }

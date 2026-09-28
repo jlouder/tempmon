@@ -33,11 +33,23 @@ monitor.maximumAgeSeconds=1500
 #   venstar      - a Venstar thermostat
 monitor.temperatureProvider=venstar
 
+# Which notification method to use, one of:
+#   email - emails a list of addresses
+#   ntfy  - uses ntfy.sh to send a notification
+monitor.notifier=ntfy
+
+# For 'email' notifier:
 # Email addresses to notify when there's an alert. Separate addresses
 # with a comma.
 email.recipients=someone@example.com,another-person@example.com
 # SMTP server to use to send email
 email.host=localhost
 email.port=25
+
+# For 'ntfy' notifier:
+# Name of the topic to notify on
+ntfy.topic=my-alerts
+# Priority for the alert (default is 'high')
+ntfy.priority=critical
 
 logging.level.org.loudermilk=DEBUG
