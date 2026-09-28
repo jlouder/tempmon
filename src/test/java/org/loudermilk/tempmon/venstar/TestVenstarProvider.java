@@ -10,7 +10,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.loudermilk.tempmon.util.ResettableQueueDispatcher;
+//import org.loudermilk.tempmon.util.ResettableQueueDispatcher;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -22,7 +22,7 @@ class TestVenstarProvider {
 	
 	private static MockWebServer mockWebServer;
 	
-	private static ResettableQueueDispatcher dispatcher;
+//	private static ResettableQueueDispatcher dispatcher;
 	
 	private String loginResponseString = """
 			{ "AccessToken": "myaccesstoken", "RefreshToken": "myrefreshtoken", "ExpiresIn": 3600 }
@@ -96,9 +96,7 @@ class TestVenstarProvider {
 
     @BeforeAll
     static void setUp() throws IOException {
-    	dispatcher = new ResettableQueueDispatcher();
         mockWebServer = new MockWebServer();
-        mockWebServer.setDispatcher(dispatcher);
         mockWebServer.start();
     }
 
@@ -109,8 +107,6 @@ class TestVenstarProvider {
 
 	@BeforeEach
 	public void beforeEachTest() throws InterruptedException {
-		// clear out any queued responses
-		dispatcher.clear();
 		// clear out any requests the previous test didn't read
 		while (mockWebServer.takeRequest(100, TimeUnit.MILLISECONDS) != null);
 		provider = new VenstarProvider();

@@ -10,8 +10,7 @@ import org.loudermilk.tempmon.weathercloud.model.Values;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
+import org.springframework.resilience.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -66,7 +65,7 @@ public class WeathercloudProvider implements TemperatureProvider {
 		throw new DeviceNotFoundException("device " + deviceCode + " not found");
 	}
 
-	@Retryable(maxAttempts = 5, backoff = @Backoff(delay = 5000, multiplier = 2))
+	@Retryable(maxRetries = 5, delayString = "5000ms", multiplier = 2)
 	@Override
 	public double getTemperature() {
 		Device device = findDevice(deviceLatitude, deviceLongitude, deviceCode);

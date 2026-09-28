@@ -19,8 +19,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
+import org.springframework.resilience.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
@@ -107,7 +106,7 @@ public class VenstarProvider implements TemperatureProvider {
 		accessTokenExpireTime = System.currentTimeMillis() + tokenRefreshResponse.getExpiresIn() * 1000L;
 	}
 
-	@Retryable(maxAttempts = 5, backoff = @Backoff(delay = 5000, multiplier = 2))
+	@Retryable(maxRetries = 5, delayString = "5000ms", multiplier = 2)
 	@Override
 	public double getTemperature() {
 		if (accessToken == null) {
